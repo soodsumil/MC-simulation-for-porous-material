@@ -1,0 +1,124 @@
+import numpy as np
+from numpy import linalg as LA
+from math import sqrt, asin, pi, sin, cos
+import random
+import csv
+
+#Code to import particle bed data from a csv file
+# =============================================================================
+# f = open('dave_data_0_10.csv','r')
+# reader = csv.reader(f)
+# data = []
+# for row in reader:
+#     data.append(row)
+# data = np.array(data,float)
+# =============================================================================
+X = data.tolist()  #Converting data from a Numpy array to a list
+D = 0.476  # diameter of the particle
+penetration_len = [] #Initializing the list to save the value of penetration length at each iteration
+
+for i in range(1000): # number of iterations
+#If the selected sphere is near the walls the find a new sphere  
+    sphere_center_data_new = X #new list to iterate over in the code
+    while False: 
+        g = random.choice(range(len(X)-1)) # randomly choose a sphere from the list 
+        main_sphere_center = X[g]
+#If the selected sphere is near the walls the find a new sphere  
+        if main_sphere_center[0]<11 or main_sphere_center[0]>19.5 or main_sphere_center[1]<11 or main_sphere_center[1]>19.5 or main_sphere_center[2]<11 or main_sphere_center[2]>19.5:
+            continue
+#remove the selected sphere from this list
+    del sphere_center_data_new[g]
+    
+#Code to get the direction cosines of the emitted ray in the ground frame making sure that this ray doesn't penetrate any sphere
+# Direction cosines of the ground frame
+    i1 = np.array([1,0,0])
+    j1 = np.array([0,1,0])
+    k1 = np.array([0,0,1])
+#random cone and circumferential angles to get a random point of the selected particle
+    R_gamma = np.random.random(1)[0]
+    R_theta = np.random.random(1)[0]
+    gamma = 2*pi*R_gamma
+    theta = 2*pi*R_theta
+#Direction cosines of the random point on the sphere
+    dir_cos_main = np.array([sin(gamma)*cos(theta), sin(gamma)*sin(theta), cos(gamma)])
+    #co-ordinates of the emission point
+    emission_point = np.array([main_sphere_center[0]+sin(gamma)*cos(theta)*(D/2), main_sphere_center[1]+sin(gamma)*sin(theta)*(D/2), main_sphere_center[2]+cos(gamma)*(D/2)])
+# Rotation matrix to get the direction of emitted ray in the ground frame
+    k2_ = np.array([emission_point[0]/(D/2),emission_point[1]/(D/2),emission_point[2]/(D/2)])
+    norm1 =LA.norm(k2_)
+    k2 = k2_/norm1
+    norm2 = np.cross(k2,k1)
+    i2 = (np.cross(k2,k1))/LA.norm(norm2)
+    j2 = np.cross(k2,i2)
+#rotation matrix to get direction cosines in the ground frame
+    rot = np.array([[i2],[j2],[k2]])
+    rot = rot.transpose()
+#random angles to emit a ray
+    R_gamma1 = np.random.random(1)[0]
+    R_theta1 = np.random.random(1)[0]
+    gamma1 = asin(R_gamma1**0.5)
+    theta1 = 2*pi*R_theta1
+#direction cosines of the ray in secondary co-ordinate frame
+    dir_cos_line = np.array([sin(gamma1)*cos(theta1), sin(gamma1)*sin(theta1), cos(gamma1)])
+    
+#direction cosines in the ground frame
+    dir_cos_line_grdframe = np.matmul(rot,dir_cos_line)
+    
+#initializing the array to save the final result
+    sphere_hitting = np.array([[0,0,0],[0,0,0]])
+#calculation of the distance of all the spheres in the list to the emitted ray and checking the spheres that are being hit by the ray
+    p1= np.array([emission_point[0],emission_point[1],emission_point[2]])
+    p2= np.array([emission_point[0]+dir_cos_line_grdframe[0]*10,emission_point[1]+dir_cos_line_grdframe[1]*10,emission_point[2]+dir_cos_line_grdframe[2]*10])
+    p1 = np.reshape(p1,(1,3))
+    p2 = np.reshape(p2,(1,3))
+    
+    for a in sphere_center_data_new:
+        b = np.array(a)
+        y = np.divide(p2 - p1, np.linalg.norm(p2 - p1)) 
+        n1_ = np.squeeze(np.asarray(p1-b))
+        n1 = np.array([n1_[0] - b[0],n1_[1] - b[1],n1_[2] - b[2]])
+        n2 = np.squeeze(np.asarray(y))
+        n3 = np.squeeze(np.asarray(b-p2))
+        s = np.dot(n1, n2)
+        t = np.dot(n3, n2)
+        h = np.maximum.reduce([s, t, 0])
+        c = np.cross(b - p1, y)
+        w = LA.norm(c)
+        Dis_center_to_line = sqrt(w**2 + h**2)
+        if Dis_center_to_line < D/2:
+            sphere_hitting= np.vstack((sphere_hitting,a))
+            
+    xx = 100   #random initialization
+    if len(sphere_hitting)==2: # If no sphere is hitting the ray then move to the next iteration
+        continue
+#Finding the centers of the closest sphere hitting the ray
+    for a in sphere_hitting[2:]:
+        dis = sqrt((main_sphere_center[0] - a[0])**2 + (main_sphere_center[1] - a[1])**2 + (main_sphere_center[2] - a[2])**2)
+        if dis< xx:
+            xx = dis
+            closest_sphere = a
+#calculating the points at which the line or ray cut the sphere           
+    p1 = np.squeeze(np.asarray(p1))
+    p2 = np.squeeze(np.asarray(p2))
+    u = (p2[0] - p1[0])**2+(p2[1] - p1[1])**2+(p2[2] - p1[2])**2
+    v = -2*((p2[0] - p1[0])*     (closest_sphere[0]-p1[0])) + -2*((p2[1] - p1[1])*(closest_sphere[1]-p1[1]))+ -2*((p2[2] - p1[2])*(closest_sphere[2]-p1[2]))
+    w = (closest_sphere[0]-emission_point[0])**2+(closest_sphere[1]-emission_point[1])**2+(closest_sphere[2]-emission_point[2])**2 - (D/2)**2
+    t1 = (-v + sqrt(v**2-4*u*w))/(2*u)
+    t2 = (-v - sqrt(v**2-4*u*w))/(2*u)
+    ep1 = np.array([emission_point[0]+(p2[0] - p1[0])*t1,emission_point[1]+(p2[1] - p1[1])*t1,emission_point[2]+(p2[2] - p1[2])*t1])
+    ep2 = np.array([emission_point[0]+(p2[0] - p1[0])*t2,emission_point[1]+(p2[1] - p1[1])*t2,emission_point[2]+(p2[2] - p1[2])*t2])
+#the distance between the hitting points and the emission point to get the lenght travelled by the ray before hitting
+    penetration_length1 = sqrt((emission_point[0]-ep1[0])**2 + (emission_point[1]-ep1[1])**2 + (emission_point[2]-ep1[2])**2)
+    penetration_length2 = sqrt((emission_point[0]-ep2[0])**2 + (emission_point[1]-ep2[1])**2 + (emission_point[2]-ep2[2])**2)
+    if (penetration_length1 <= penetration_length2):
+        penetration_length = penetration_length1
+    else:
+        penetration_length = penetration_length2
+#adding the calculated penetration length to the list
+    penetration_len.append(penetration_length)
+
+#Saving the results in a file
+#with open('penetrationlen-0.7.csv', "w", newline = '') as output:
+#    writer = csv.writer(output, lineterminator='\n')
+#    writer.writerows(penetration_length)
+            

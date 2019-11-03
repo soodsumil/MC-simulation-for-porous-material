@@ -153,8 +153,21 @@ for i in range(5000):
                 t1 = (-v + sqrt(v**2-(4*u*w)))/(2*u)
                 ep2 = np.array([ep[0]+ t1*refracted_dir_cos[0], ep[1]+ t1*refracted_dir_cos[1], ep[2]+ t1*refracted_dir_cos[2]])
                 s = sqrt((ep2[0]-ep[0])**2 + (ep2[1]-ep[1])**2+ (ep2[2]-ep[2])**2)
+                normal2 = np.array([ep2[0]-c[0],ep2[1]-c[1],ep2[2]-c[2]])
+                norm2 = LA.norm(normal2)
+                normal_dir_cos2 = np.array([normal2[0]/norm2, normal2[1]/norm2, normal2[2]/norm2])
+                b1 = nta/nta_air
+                phi3 = acos(np.dot(normal_dir_cos2,refracted_dir_cos))
+                phi4 = asin(b1*sin(phi3))
+                #print(phi4)                         
+                c3 = np.dot(normal_dir_cos2,refracted_dir_cos)
+                c4 = 1 - ((b1**2)*(1-c3**2))
+                refracted_dir_cos2 = np.array([(b1)*(refracted_dir_cos[0]) - (b1*c3-sqrt(c4))*normal_dir_cos2[0], (b1)*(refracted_dir_cos[1]) - (b1*c3-sqrt(c4))*normal_dir_cos2[1], (b1)*(refracted_dir_cos[2]) -(b1*c3-sqrt(c4))*normal_dir_cos2[2]])
+                norm3 = LA.norm(refracted_dir_cos2)
+                refracted_dir_cos3 = np.array([refracted_dir_cos2[0]/norm3,refracted_dir_cos2[1]/norm3,refracted_dir_cos2[2]/norm3])
+                #print(acos(np.dot(normal_dir_cos2,refracted_dir_cos3)))
                 pts = np.vstack((pts,ep2))
-                dir_cos = np.vstack((dir_cos,refracted_dir_cos))
+                dir_cos = np.vstack((dir_cos,refracted_dir_cos3))
                 ii = ii+1
                 I = I - I*eta # need to decide how much enerfy gets lost 
         elif ep[2]< 0:

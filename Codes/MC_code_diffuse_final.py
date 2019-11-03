@@ -208,7 +208,7 @@ for i in range(5000): #number of iterations
                 print(acos(np.dot(normal_dir_cos2,refracted_dir_cos3)))
                 #adding the final values to the list
                 x = np.vstack((x,ep2))
-                Dir_cosines = np.vstack((Dir_cosines,refracted_dir_cos))
+                Dir_cosines = np.vstack((Dir_cosines,refracted_dir_cos3))
                 ii = ii+1
                 I = I*rho_avg
                 

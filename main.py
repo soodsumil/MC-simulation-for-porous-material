@@ -30,11 +30,12 @@ def example():
                     )
    
     ## This perforoms full cycle of ray tracing until the ray is outside the medium boundaries (B) or its power is smaller than the tolerance
-    return r 
-    #r.full_cycle()
-    #r.draw()
-    #pylab.show()
+    r.full_cycle()
+    r.draw()
+    pylab.show()
 
+if __name__ == "__main__":
+    example()
 
 
 

@@ -61,15 +61,13 @@ class Penetration_length:
             
             del sphere_center[g]
             y = Divergence()
-            dir = y.circular_divergence()
-            ep = np.asarray(center)+ np.asarray(dir)*diameter
-            rot = y.rotation(dir)
+            dirc = y.circular_divergence()
+            ep = np.asarray(center)+ np.asarray(dirc)*diameter
+            rot = y.rotation(dirc)
             dir_ray_sec = y.cone_divergence()
             dir_ray = np.matmul(rot,dir_ray_sec)
             dir_ray = np.reshape(dir_ray,(1,3))
-            ep2 = ep + dir_ray*10
             ep = np.reshape(ep,(1,3))
-            ep2 = np.reshape(ep2,(1,3))
             ep = np.squeeze(ep)
             dir_ray = np.squeeze(dir_ray)
             sphere_hitting = []
@@ -102,16 +100,7 @@ class Penetration_length:
         
         
         
-        
-        
-        
-x = Penetration_length('my_data')     
-p = x.penetration_length(0.476, 5000, [10,10,0], [20,20,3])
-        
-        
-        
-        
-        
+    
         
         
         
